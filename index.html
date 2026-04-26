@@ -2,101 +2,132 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"/>
-<!-- 强制锁定横屏 + 禁止缩放 -->
-<meta name="viewport" content="width=900, height=600, initial-scale=1.0, user-scalable=no"/>
-<meta name="screen-orientation" content="landscape"/>
-<meta name="x5-orientation" content="landscape"/>
-<meta name="x5-fullscreen" content="true"/>
-<meta name="fullscreen" content="yes"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<!-- 强制横屏适配 -->
+<meta name="screen-orientation" content="landscape">
+<meta name="x5-orientation" content="landscape">
 <title>多多PK元宝猜数字</title>
 <style>
-html,body{margin:0;padding:0;width:900px;height:600px;overflow:hidden;background:#ECE8ED;}
-/* 核心：固定900*600，和你电脑窗口一模一样 */
-#gameWrap{
+* {margin:0;padding:0;box-sizing:border-box;}
+body {
+    width:100vw;
+    height:100vh;
+    overflow:hidden;
+    background:#000;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+/* 核心：原始画布900*600，整体等比缩放到手机横屏 */
+.game-box {
+    position:relative;
     width:900px;
     height:600px;
-    position:relative;
-    background:url(background.png) no-repeat;
-    background-size:900px 600px;
+    background:url(background.png) no-repeat center;
+    background-size:100% 100%;
+    /* 自动缩满手机横屏 */
+    transform: scale(calc(100vw / 900));
+    transform-origin: center center;
 }
-/* 全部绝对定位，照搬你tk坐标 */
-input,button,select{position:absolute;border-radius:4px;border:1px solid #ccc;font-family:"微软雅黑";font-size:11px;}
-button{border:none;color:#fff;cursor:pointer;}
-.txt{position:absolute;font-family:"微软雅黑";font-size:11px;}
+/* 竖屏提示 */
+@media (orientation: portrait) {
+    .game-box {display:none;}
+    body::before {
+        content:"请把手机旋转为横屏";
+        color:#fff;
+        font-size:22px;
+        text-align:center;
+    }
+}
+input,button,select {
+    position:absolute;
+    font-family:"微软雅黑";
+    border-radius:4px;
+    border:1px solid #ccc;
+    font-size:11px;
+}
+button {
+    border:none;
+    color:#fff;
+    cursor:pointer;
+}
+.text-item {
+    position:absolute;
+    font-family:"微软雅黑";
+    font-size:11px;
+}
 </style>
 </head>
 <body>
-<div id="gameWrap">
 
-<!-- 顶部标题 -->
-<div class="txt" style="top:3px;left:310px;font-size:17px;color:#800080;font-weight:bold;">🌐 多多PK元宝猜数字</div>
+<div class="game-box">
+    <!-- 标题 -->
+    <div class="text-item" style="top:3px;left:310px;font-size:17px;color:#800080;font-weight:bold;">🌐 多多PK元宝猜数字</div>
 
-<!-- 房主、锁定文字 -->
-<div class="txt" id="ownerText" style="top:93px;left:630px;color:#c00000;font-weight:bold;">👑房主：无</div>
-<div class="txt" id="lockText" style="top:93px;left:735px;color:#0066cc;">🔓房间：未锁定</div>
+    <!-- 房主 & 锁定 -->
+    <div class="text-item" id="ownerText" style="top:93px;left:630px;color:#c00000;font-weight:bold;">👑房主：无</div>
+    <div class="text-item" id="lockText" style="top:93px;left:735px;color:#0066cc;">🔓房间：未锁定</div>
 
-<!-- 房间号 + 昵称 -->
-<div class="txt" style="top:50px;left:20px;color:#800080;">房间号：</div>
-<input id="roomId" value="6666" style="top:50px;left:100px;width:100px;height:24px;">
+    <!-- 房间号 昵称 -->
+    <div class="text-item" style="top:50px;left:20px;color:#800080;">房间号：</div>
+    <input id="roomId" value="6666" style="top:50px;left:100px;width:100px;height:24px;">
 
-<div class="txt" style="top:50px;left:180px;color:#800080;">昵称：</div>
-<input id="nickName" style="top:50px;left:230px;width:100px;height:24px;">
+    <div class="text-item" style="top:50px;left:180px;color:#800080;">昵称：</div>
+    <input id="nickName" style="top:50px;left:230px;width:100px;height:24px;">
 
-<!-- 难度、猜数数量【你缺失的两个控件补上】 -->
-<div class="txt" style="top:100px;left:20px;color:#800080;">难度：</div>
-<select id="diffSel" style="top:100px;left:80px;width:100px;height:24px;">
-    <option value="100">1~100</option>
-    <option value="200" selected>1~200</option>
-    <option value="500">1~500</option>
-</select>
+    <!-- 难度 + 猜数数量【补齐】 -->
+    <div class="text-item" style="top:100px;left:20px;color:#800080;">难度：</div>
+    <select id="diffSel" style="top:100px;left:80px;width:100px;height:24px;">
+        <option value="100">1~100</option>
+        <option value="200" selected>1~200</option>
+        <option value="500">1~500</option>
+    </select>
 
-<div class="txt" style="top:100px;left:160px;color:#800080;">猜数数量：</div>
-<select id="countSel" style="top:100px;left:250px;width:60px;height:24px;">
-    <option value="1" selected>1</option>
-    <option value="2">2</option>
-    <option value="3">3</option>
-    <option value="4">4</option>
-    <option value="5">5</option>
-    <option value="6">6</option>
-    <option value="7">7</option>
-    <option value="8">8</option>
-    <option value="9">9</option>
-    <option value="10">10</option>
-</select>
+    <div class="text-item" style="top:100px;left:160px;color:#800080;">猜数数量：</div>
+    <select id="countSel" style="top:100px;left:250px;width:60px;height:24px;">
+        <option value="1" selected>1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10</option>
+    </select>
 
-<!-- 连接状态 -->
-<div class="txt" id="statusText" style="top:100px;left:300px;color:red;">未连接</div>
+    <!-- 连接状态 -->
+    <div class="text-item" id="statusText" style="top:100px;left:300px;color:red;">未连接</div>
 
-<!-- 猜数字输入 -->
-<div class="txt" style="top:160px;left:20px;color:#800080;font-size:12px;">请输入猜测数字：</div>
-<input id="guessNum" type="number" style="top:160px;left:160px;width:120px;height:30px;background:#e8a8b8;color:#e63946;font-size:16px;text-align:center;">
+    <!-- 猜数字输入 -->
+    <div class="text-item" style="top:160px;left:20px;color:#800080;font-size:12px;">请输入猜测数字：</div>
+    <input id="guessNum" type="number" style="top:160px;left:160px;width:120px;height:30px;background:#e8a8b8;color:#e63946;font-size:16px;text-align:center;">
 
-<!-- 提示文字 -->
-<div class="txt" id="tipText" style="top:200px;left:20px;color:blue;"></div>
+    <!-- 提示文字 -->
+    <div class="text-item" id="tipText" style="top:200px;left:20px;color:blue;"></div>
 
-<!-- 日志记录 -->
-<div class="txt" style="top:125px;left:630px;font-weight:bold;">📝 战绩记录</div>
-<textarea id="logBox" readonly style="top:150px;left:630px;width:180px;height:208px;font-size:9px;resize:none;"></textarea>
+    <!-- 日志 -->
+    <div class="text-item" style="top:125px;left:630px;font-weight:bold;">📝 战绩记录</div>
+    <textarea id="logBox" readonly style="top:150px;left:630px;width:180px;height:208px;font-size:9px;resize:none;"></textarea>
 
-<!-- 按钮 完全复刻你原图坐标 -->
-<button onclick="conn()" style="top:48px;left:348px;width:80px;height:26px;background:#4169e1;">加入联机</button>
-<button onclick="startRound()" style="top:380px;left:700px;width:140px;height:26px;background:#28c76f;">开启对局</button>
-<button onclick="sendGuess()" style="top:160px;left:280px;width:80px;height:30px;background:#ff7700;">确认猜测</button>
-<button onclick="disConn()" style="top:440px;left:740px;width:80px;height:26px;background:#dc3545;">断开连接</button>
+    <!-- 全部按钮 原版坐标 -->
+    <button onclick="conn()" style="top:48px;left:348px;width:80px;height:26px;background:#4169e1;">加入联机</button>
+    <button onclick="startRound()" style="top:380px;left:700px;width:140px;height:26px;background:#28c76f;">开启对局</button>
+    <button onclick="sendGuess()" style="top:160px;left:280px;width:80px;height:30px;background:#ff7700;">确认猜测</button>
+    <button onclick="disConn()" style="top:440px;left:740px;width:80px;height:26px;background:#dc3545;">断开连接</button>
 
-<button onclick="lockRoom()" style="top:50px;left:630px;width:100px;height:26px;background:#666666;">锁定房间</button>
-<button onclick="changeOwner()" style="top:50px;left:745px;width:100px;height:26px;background:#9922cc;">移交房主</button>
-<button onclick="kickMan()" style="top:500px;left:740px;width:80px;height:26px;background:#dd2222;">踢出玩家</button>
-
+    <button onclick="lockRoom()" style="top:50px;left:630px;width:100px;height:26px;background:#666666;">锁定房间</button>
+    <button onclick="changeOwner()" style="top:50px;left:745px;width:100px;height:26px;background:#9922cc;">移交房主</button>
+    <button onclick="kickMan()" style="top:500px;left:740px;width:80px;height:26px;background:#dd2222;">踢出玩家</button>
 </div>
 
 <script>
-// 服务器地址 写你自己的
+// 你的服务器地址
 const WS_URL = "ws://192.168.0.103:8888";
 let ws = null;
 let isOnline = false;
 
-// 快捷获取元素
 function $(id){return document.getElementById(id);}
 
 // 连接
@@ -104,50 +135,40 @@ function conn(){
     let rid = $("roomId").value.trim();
     let name = $("nickName").value.trim();
     if(!rid||!name){alert("请填房间号+昵称");return;}
-
     ws = new WebSocket(WS_URL);
     ws.onopen = function(){
         isOnline = true;
         $("statusText").innerText = "✅已联机";
         $("statusText").style.color = "green";
         sendMsg({type:"join",room:rid,name:name});
-    }
+    };
     ws.onmessage = function(e){
         let arr = e.data.split("\n");
         arr.forEach(line=>{
-            if(!line)return;
+            if(!line) return;
             let d = JSON.parse(line);
             switch(d.type){
                 case "log":
-                    $("logBox").value = d.content + "\n" + $("logBox").value;
-                    break;
+                    $("logBox").value = d.content + "\n" + $("logBox").value;break;
                 case "tip":
-                    $("tipText").innerText = d.content;
-                    break;
+                    $("tipText").innerText = d.content;break;
                 case "owner":
-                    $("ownerText").innerText = "👑房主："+d.owner;
-                    break;
+                    $("ownerText").innerText = "👑房主："+d.owner;break;
                 case "lock_state":
-                    $("lockText").innerText = d.lock ? "🔒房间：已锁定":"🔓房间：未锁定";
-                    break;
+                    $("lockText").innerText = d.lock ? "🔒房间：已锁定":"🔓房间：未锁定";break;
                 case "win":
-                    alert("🏆游戏结束\n赢家："+d.winner+"\n答案："+d.answers);
-                    break;
+                    alert("🏆游戏结束\n赢家："+d.winner+"\n答案："+d.answers);break;
             }
         })
-    }
-    ws.onclose = function(){
-        disConn();
-    }
+    };
+    ws.onclose = disConn;
 }
 
-// 发送消息
 function sendMsg(obj){
     if(!isOnline)return;
     ws.send(JSON.stringify(obj)+"\n");
 }
 
-// 断开
 function disConn(){
     if(ws)ws.close();
     isOnline = false;
@@ -157,7 +178,6 @@ function disConn(){
     $("lockText").innerText = "🔓房间：未锁定";
 }
 
-// 猜数字
 function sendGuess(){
     let num = $("guessNum").value;
     if(!num){alert("请输入数字");return;}
@@ -170,7 +190,6 @@ function sendGuess(){
     $("guessNum").value = "";
 }
 
-// 开启对局（读取难度、数量）
 function startRound(){
     let max = parseInt($("diffSel").value);
     let cnt = parseInt($("countSel").value);
@@ -182,23 +201,12 @@ function startRound(){
         count:cnt
     });
 }
+function lockRoom(){sendMsg({type:"lock_room",room:$("roomId").value,name:$("nickName").value});}
+function changeOwner(){let t=prompt("输入新房主昵称");if(t)sendMsg({type:"change_owner",room:$("roomId").value,name:$("nickName").value,target:t});}
+function kickMan(){let t=prompt("输入要踢出昵称");if(t)sendMsg({type:"kick",room:$("roomId").value,name:$("nickName").value,target:t});}
 
-function lockRoom(){
-    sendMsg({type:"lock_room",room:$("roomId").value,name:$("nickName").value});
-}
-function changeOwner(){
-    let t = prompt("输入新房主昵称");
-    if(t)sendMsg({type:"change_owner",room:$("roomId").value,name:$("nickName").value,target:t});
-}
-function kickMan(){
-    let t = prompt("输入要踢出昵称");
-    if(t)sendMsg({type:"kick",room:$("roomId").value,name:$("nickName").value,target:t});
-}
-
-// 心跳
-setInterval(()=>{
-    if(isOnline)sendMsg({type:"heartbeat"});
-},5000);
+// 心跳保活
+setInterval(()=>{if(isOnline)sendMsg({type:"heartbeat"});},5000);
 </script>
 </body>
 </html>
