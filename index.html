@@ -1,279 +1,347 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>猜数字PK</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: "Microsoft YaHei", sans-serif;
-        }
-
-        body {
-            width: 100vw;
-            min-height: 100vh;
-            background-image: url("background.png");
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            padding: 10px;
-        }
-
-        /* 标题 */
-        .title {
-            text-align: center;
-            font-size: 22px;
-            font-weight: bold;
-            color: #000;
-            margin-bottom: 10px;
-        }
-
-        /* 右侧区域 */
-        .right-box {
-            text-align: right;
-            margin: 8px 0;
-        }
-
-        .right-box label {
-            color: #ff69b4;
-            font-size: 14px;
-            margin-right: 5px;
-        }
-
-        input, select, button {
-            padding: 6px 8px;
-            font-size: 14px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            background: transparent;
-            margin: 3px;
-        }
-
-        button {
-            background: #ff69b4;
-            color: #fff;
-            border: none;
-        }
-
-        /* 左侧房主区域 */
-        .left-box {
-            margin: 10px 0;
-        }
-
-        .owner-info {
-            color: #000;
-            font-size: 14px;
-            margin-bottom: 5px;
-        }
-
-        /* 猜数区域 */
-        .guess-box {
-            text-align: right;
-            margin: 10px 0;
-        }
-
-        .current-player {
-            color: #0000ff;
-            font-size: 14px;
-            text-align: right;
-            margin-bottom: 5px;
-        }
-
-        .tip {
-            color: #ff0000;
-            font-size: 14px;
-            text-align: right;
-            margin-top: 5px;
-        }
-
-        /* 战绩记录 */
-        .record-box {
-            margin: 15px 0;
-        }
-
-        .record-title {
-            color: #ff0000;
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        #logArea {
-            width: 100%;
-            height: 120px;
-            background: transparent;
-            border: 1px solid #ccc;
-            overflow-y: scroll;
-            padding: 5px;
-            font-size: 13px;
-            color: #000;
-        }
-
-        /* 最高纪录 */
-        .rank-box {
-            margin: 10px 0;
-            font-size: 14px;
-        }
-
-        /* 烟花 */
-        #fireworks {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            pointer-events: none;
-            display: none;
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>猜数字PK</title>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "微软雅黑", sans-serif;
+}
+body {
+    width: 100vw;
+    min-height: 100vh;
+    background: url("background.png") no-repeat center center;
+    background-size: cover;
+    background-attachment: fixed;
+    overflow-x: hidden;
+    padding: 15px;
+}
+/* 1.顶部居中标题 黑色加粗 无背景 */
+.game-title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 700;
+    color: #000000;
+    margin-bottom: 20px;
+}
+/* 左侧整体：昵称/房间号/范围/个数/猜数输入/提示 */
+.left-wrap {
+    width: 48%;
+    float: left;
+}
+/* 右侧整体：房主按钮/战绩/胜负记录 */
+.right-wrap {
+    width: 48%;
+    float: right;
+    text-align: left;
+}
+/* 粉色昵称文字 无背景 */
+.pink-text {
+    color: #ff69b4;
+    font-size: 15px;
+    font-weight: 500;
+}
+/* 蓝色当前回合玩家 */
+.blue-text {
+    color: #0000ff;
+    font-size: 15px;
+    margin: 6px 0;
+}
+/* 红色提示文字（大/小/惩罚） */
+.red-text {
+    color: #ff0000;
+    font-size: 15px;
+    margin: 8px 0;
+}
+input, select {
+    border: 1px solid #999;
+    background: transparent;
+    padding: 5px 8px;
+    margin: 4px 0;
+    border-radius: 4px;
+    font-size: 14px;
+}
+button {
+    padding: 6px 12px;
+    margin: 4px 3px;
+    border: none;
+    border-radius: 4px;
+    background: #4488cc;
+    color: #fff;
+    cursor: pointer;
+}
+/* 战绩窗口 红色标题 黑色字体 滚动条 */
+.record-title {
+    color: #ff0000;
+    font-size: 17px;
+    font-weight: bold;
+    margin: 10px 0 5px;
+}
+.record-box {
+    width: 100%;
+    height: 140px;
+    border: 1px solid #666;
+    overflow-y: auto;
+    padding: 6px;
+    font-size: 13px;
+    color: #000;
+    background: transparent;
+}
+/* 胜负记录 */
+.rank-info {
+    margin-top: 12px;
+    font-size: 14px;
+    color: #000;
+}
+/* 烟花画布 */
+#fireworks {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    display: none;
+    z-index: 999;
+}
+</style>
 </head>
-
 <body>
 
-<!-- 1. 标题 -->
-<div class="title">猜数字PK</div>
+<!-- 1.游戏标题 顶端居中 黑色加粗 -->
+<div class="game-title">猜数字PK</div>
 
-<!-- 8. 左侧房主功能 -->
-<div class="left-box">
-    <div class="owner-info" id="ownerArea">👑 房主：无</div>
-    <button onclick="createRoom()">创建房间</button>
-    <button onclick="lockRoom()">锁定房间</button>
-    <button onclick="kickPlayer()">踢人</button>
+<!-- 左侧：昵称、房间号、范围、猜数数量、猜数输入、提示 -->
+<div class="left-wrap">
+    <div class="pink-text">玩家昵称：</div>
+    <input type="text" id="nickname" placeholder="请输入昵称">
+
+    <div class="pink-text" style="margin-top:6px">房间号码：</div>
+    <input type="text" id="roomCode" placeholder="输入房间号">
+
+    <div style="margin-top:6px">
+        <span class="pink-text">数字范围：</span>
+        <select id="rangeSelect">
+            <option value="100">1 ~ 100</option>
+            <option value="200">1 ~ 200</option>
+            <option value="300">1 ~ 300</option>
+        </select>
+    </div>
+
+    <div style="margin-top:6px">
+        <span class="pink-text">猜数个数：</span>
+        <select id="countSelect">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+        </select>
+    </div>
+
+    <div class="blue-text" id="turnTip">当前轮猜数玩家：无</div>
+
+    <input type="number" id="guessInput" placeholder="请输入猜测数字">
+    <button onclick="sendGuess()">确认提交</button>
+
+    <!-- 红色提示：大了/小了/惩罚 -->
+    <div class="red-text" id="msgTip"></div>
 </div>
 
-<!-- 5. 昵称 + 创建房间 -->
-<div class="right-box">
-    <label>昵称：</label>
-    <input type="text" id="nickName" placeholder="请输入昵称">
-</div>
+<!-- 右侧：房主操作区、战绩、胜负记录 -->
+<div class="right-wrap">
+    <div id="ownerShow">房主：无</div>
+    <div style="margin:8px 0;">
+        <button onclick="createRoom()">创建房间</button>
+        <button onclick="joinRoom()">加入房间</button>
+    </div>
+    <div>
+        <button onclick="startGame()">开始游戏</button>
+        <button onclick="lockRoom()">锁定房间</button>
+        <button onclick="kickPlayer()">踢出玩家</button>
+    </div>
 
-<!-- 6. 数字范围 7. 猜几个数 -->
-<div class="right-box">
-    <label>数字范围：</label>
-    <select id="rangeSel">
-        <option value="100">1~100</option>
-        <option value="200">1~200</option>
-        <option value="300">1~300</option>
-    </select>
-
-    <label>猜数个数：</label>
-    <select id="countSel">
-        <option value="1">1</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-        <option value="6">6</option>
-        <option value="7">7</option>
-        <option value="8">8</option>
-        <option value="9">9</option>
-        <option value="10">10</option>
-    </select>
-</div>
-
-<!-- 9. 猜数输入框 -->
-<div class="guess-box">
-    <div class="current-player" id="currentPlayer">当前猜数：无</div>
-    <input type="number" id="guessInput" placeholder="输入数字">
-    <button onclick="sendGuess()">确认猜数</button>
-    <div class="tip" id="tipArea"></div>
-</div>
-
-<!-- 11. 战绩记录 -->
-<div class="record-box">
+    <!-- 战绩窗口 红色标题+滚动条 -->
     <div class="record-title">战绩</div>
-    <div id="logArea"></div>
+    <div class="record-box" id="logBox"></div>
+
+    <!-- 最高胜负记录 -->
+    <div class="rank-info" id="rankBox">
+        最高纪录：暂无数据<br>
+        胜负查询：暂未开启
+    </div>
 </div>
 
-<!-- 14. 最高纪录 -->
-<div class="rank-box">
-    <div id="rankArea">最高纪录：无</div>
-</div>
-
-<!-- 烟花 -->
+<!-- 烟花层 -->
 <div id="fireworks"></div>
 
 <script>
-// =============================================
-// 配置：改成你自己的外网穿透地址（ngrok）
-// =============================================
-const WS_SERVER = "ws://127.0.0.1:8888";
-let ws;
-let nick = "";
-let room = "";
-let isOwner = false;
+// ============ 服务器地址 你后续换成ngrok外网ws地址 ============
+const WS_URL = "ws://127.0.0.1:8888";
+let ws = null;
+let myNick = "";
+let myRoom = "";
+let isRoomOwner = false;
 
-// 连接服务器
-function connect() {
-    ws = new WebSocket(WS_SERVER);
-    ws.onopen = () => {
-        send({type: "join", room: room, name: nick});
+// 惩罚库
+const punishList = [
+    "唱一段歌🎤",
+    "做5个深蹲💪",
+    "学小猫叫🐱",
+    "说一句搞笑口头禅🤪",
+    "原地转三圈⭕",
+    "夸所有人一句💖",
+    "背诵一句古诗📜"
+];
+
+// 连接WebSocket
+function connectWs(){
+    ws = new WebSocket(WS_URL);
+    ws.onopen = function(){
+        addLog("✅ 服务器连接成功");
     };
-    ws.onmessage = (e) => {
-        const data = JSON.parse(e.data);
-        if (data.type === "tip") document.getElementById("tipArea").innerText = data.msg;
-        if (data.type === "log") addLog(data.msg);
-        if (data.type === "owner") {
-            document.getElementById("ownerArea").innerText = "👑 房主：" + data.name;
-            isOwner = data.isOwner;
-        }
-        if (data.type === "current") document.getElementById("currentPlayer").innerText = "当前猜数：" + data.name;
-        if (data.type === "win") {
-            document.getElementById("tipArea").innerText = "🎉 恭喜 " + data.winner + " 猜对！惩罚：" + data.punish;
+    ws.onmessage = function(e){
+        let res = JSON.parse(e.data);
+        handleMsg(res);
+    };
+    ws.onclose = function(){
+        addLog("❌ 与服务器断开连接");
+    };
+}
+
+// 接收服务端消息分发
+function handleMsg(d){
+    switch(d.type){
+        case "log":
+            addLog(d.content);break;
+        case "owner":
+            document.getElementById("ownerShow").innerText = "房主：" + d.ownerName;
+            isRoomOwner = d.isOwner;break;
+        case "turn":
+            document.getElementById("turnTip").innerText = "当前轮猜数玩家：" + d.curNick;break;
+        case "hint":
+            document.getElementById("msgTip").innerText = d.text;break;
+        case "win":
+            let p = punishList[Math.floor(Math.random() * punishList.length)];
+            document.getElementById("msgTip").innerText = "恭喜"+d.winNick+"猜对！惩罚："+p;
             showFireworks();
-        }
-    };
-}
-
-// 创建房间
-function createRoom() {
-    nick = document.getElementById("nickName").value.trim();
-    if (!nick) return alert("请输入昵称");
-    room = "ROOM-" + Date.now();
-    connect();
-    send({type: "create", room: room, name: nick});
-}
-
-// 发送消息
-function send(d) {
-    ws.send(JSON.stringify(d));
-}
-
-// 猜数
-function sendGuess() {
-    const num = document.getElementById("guessInput").value;
-    send({type: "guess", name: nick, num: parseInt(num)});
-    document.getElementById("guessInput").value = "";
-}
-
-// 房主功能
-function lockRoom() {
-    if (isOwner) send({type: "lock"});
-}
-function kickPlayer() {
-    if (isOwner) {
-        const t = prompt("输入要踢的昵称");
-        if (t) send({type: "kick", target: t});
+            break;
+        case "lock":
+            addLog("🔒 房间已锁定");break;
+        case "kick":
+            addLog("⚠️ 有玩家被踢出房间");break;
     }
 }
 
-// 日志
-function addLog(msg) {
-    const log = document.getElementById("logArea");
-    log.innerText = msg + "\n" + log.innerText;
+// 发送数据
+function sendData(obj){
+    if(!ws || ws.readyState !== 1) return;
+    ws.send(JSON.stringify(obj)+"\n");
 }
 
-// 烟花
-function showFireworks() {
-    document.getElementById("fireworks").style.display = "block";
-    setTimeout(() => {
-        document.getElementById("fireworks").style.display = "none";
-    }, 3000);
+// 创建房间
+function createRoom(){
+    myNick = document.getElementById("nickname").value.trim();
+    myRoom = document.getElementById("roomCode").value.trim();
+    if(!myNick || !myRoom){
+        alert("请填写昵称和房间号");
+        return;
+    }
+    connectWs();
+    sendData({
+        type:"createRoom",
+        room:myRoom,
+        nick:myNick,
+        range:document.getElementById("rangeSelect").value,
+        count:document.getElementById("countSelect").value
+    });
 }
+
+// 加入房间
+function joinRoom(){
+    myNick = document.getElementById("nickname").value.trim();
+    myRoom = document.getElementById("roomCode").value.trim();
+    if(!myNick || !myRoom){
+        alert("请填写昵称和房间号");
+        return;
+    }
+    connectWs();
+    sendData({
+        type:"joinRoom",
+        room:myRoom,
+        nick:myNick
+    });
+}
+
+// 房主-开始游戏
+function startGame(){
+    if(!isRoomOwner){
+        alert("只有房主可操作");
+        return;
+    }
+    sendData({
+        type:"startGame",
+        range:document.getElementById("rangeSelect").value,
+        count:document.getElementById("countSelect").value
+    });
+}
+
+// 房主-锁定房间
+function lockRoom(){
+    if(!isRoomOwner) return alert("仅房主可用");
+    sendData({type:"lockRoom"});
+}
+
+// 房主-踢人
+function kickPlayer(){
+    if(!isRoomOwner) return alert("仅房主可用");
+    let t = prompt("输入要踢出的玩家昵称：");
+    if(t) sendData({type:"kick",targetNick:t});
+}
+
+// 提交猜数
+function sendGuess(){
+    let num = document.getElementById("guessInput").value;
+    if(!num) return;
+    sendData({
+        type:"guess",
+        nick:myNick,
+        num:parseInt(num)
+    });
+    document.getElementById("guessInput").value = "";
+}
+
+// 添加战绩日志
+function addLog(txt){
+    let box = document.getElementById("logBox");
+    box.innerText = txt + "\n" + box.innerText;
+}
+
+// 烟花特效
+function showFireworks(){
+    let fw = document.getElementById("fireworks");
+    fw.style.display = "block";
+    fw.style.background = "linear-gradient(45deg,red,orange,yellow,green,blue,purple,pink)";
+    setTimeout(()=>{
+        fw.style.display = "none";
+    },2500);
+}
+
+// 心跳保活
+setInterval(()=>{
+    if(ws && ws.readyState===1){
+        sendData({type:"heartbeat"});
+    }
+},5000);
 </script>
-
 </body>
 </html>
