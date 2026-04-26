@@ -2,7 +2,12 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <!-- 强制横屏，禁止旋转 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="screen-orientation" content="landscape">
+    <meta name="x5-orientation" content="landscape">
+    <meta name="x5-fullscreen" content="true">
+    <meta name="360-fullscreen" content="true">
     <title>多多PK元宝猜数字</title>
     <style>
         * {
@@ -15,26 +20,41 @@
         body {
             width: 100vw;
             height: 100vh;
-            overflow-x: hidden;
-            background-color: #f0f0f0;
+            overflow: hidden;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
-        /* 核心：按电脑版900x600的比例，等比缩放适配所有设备 */
+        /* 核心：固定900x600电脑版尺寸，横屏按比例缩放 */
         .game-container {
             position: relative;
             width: 900px;
             height: 600px;
-            margin: 0 auto;
             background-image: url("background.png");
             background-size: cover;
             background-position: center;
-            transform-origin: top left;
+            transform-origin: center center;
         }
 
-        /* 手机自动缩放，不跑位 */
-        @media (max-width: 900px) {
+        /* 手机横屏自动缩放，保持比例 */
+        @media (max-width: 900px) and (orientation: landscape) {
             .game-container {
-                transform: scale(calc(100vw / 900));
+                transform: scale(calc(100vh / 600));
+            }
+        }
+
+        /* 竖屏提示用户旋转 */
+        @media (orientation: portrait) {
+            body::after {
+                content: "请旋转手机至横屏模式";
+                color: white;
+                font-size: 20px;
+                text-align: center;
+            }
+            .game-container {
+                display: none;
             }
         }
 
@@ -57,13 +77,16 @@
             position: absolute;
             font-size: 14px;
             font-weight: bold;
+            background: rgba(255,255,255,0.7);
+            padding: 2px 4px;
+            border-radius: 2px;
         }
     </style>
 </head>
 <body>
     <div class="game-container">
         <!-- 标题 -->
-        <div class="label" style="top:3px; left:310px; font-size:17px; color:#800080;">🌐 多多PK元宝猜数字</div>
+        <div class="label" style="top:3px; left:310px; font-size:17px; color:#800080; background:transparent;">🌐 多多PK元宝猜数字</div>
 
         <!-- 房主/锁定状态 -->
         <div class="label" id="ownerLabel" style="top:93px; left:630px; color:#c00000;">👑房主：无</div>
@@ -73,10 +96,10 @@
         <div class="label" style="top:50px; left:20px; color:#800080;">房间号：</div>
         <input id="roomId" type="text" value="6666" style="top:50px; left:100px; width:100px;">
         
-        <div class="label" style="top:50px; left:200px; color:#800080;">昵称：</div>
-        <input id="nick" type="text" style="top:50px; left:260px; width:100px;">
+        <div class="label" style="top:50px; left:180px; color:#800080;">昵称：</div>
+        <input id="nick" type="text" style="top:50px; left:230px; width:100px;">
 
-        <!-- 难度/猜数数量 -->
+        <!-- 难度/猜数数量（补全） -->
         <div class="label" style="top:100px; left:20px; color:#800080;">难度：</div>
         <select id="diffSelect" style="top:100px; left:80px; width:100px;">
             <option value="100">1~100</option>
@@ -84,8 +107,8 @@
             <option value="500">1~500</option>
         </select>
 
-        <div class="label" style="top:100px; left:200px; color:#800080;">猜数数量：</div>
-        <select id="countSelect" style="top:100px; left:290px; width:60px;">
+        <div class="label" style="top:100px; left:160px; color:#800080;">猜数数量：</div>
+        <select id="countSelect" style="top:100px; left:250px; width:60px;">
             <option value="1" selected>1</option>
             <option value="2">2</option>
             <option value="3">3</option>
@@ -99,21 +122,21 @@
         </select>
 
         <!-- 连接状态 -->
-        <div class="label" id="statusLabel" style="top:100px; left:380px; color:red;">未连接</div>
+        <div class="label" id="statusLabel" style="top:100px; left:320px; color:red;">未连接</div>
 
         <!-- 猜数字输入 -->
         <div class="label" style="top:160px; left:20px; color:#800080;">请输入猜测数字：</div>
         <input id="guessInput" type="number" style="top:160px; left:160px; width:120px; height:30px;">
 
         <!-- 提示文字 -->
-        <div class="label" id="tipLabel" style="top:200px; left:20px; color:blue;"></div>
+        <div class="label" id="tipLabel" style="top:200px; left:20px; color:blue; background:transparent;"></div>
 
         <!-- 战绩日志 -->
-        <div class="label" style="top:125px; left:630px; color:#800080;">📝 战绩记录</div>
+        <div class="label" style="top:125px; left:630px; color:#800080; background:transparent;">📝 战绩记录</div>
         <div id="logArea" style="position:absolute; top:150px; left:630px; width:180px; height:208px; background:#fff; opacity:0.9; padding:5px; font-size:12px; overflow-y:auto;"></div>
 
-        <!-- 按钮 -->
-        <button onclick="connect()" style="top:48px; left:370px; width:80px; background:#4169e1;">加入联机</button>
+        <!-- 按钮（全部还原） -->
+        <button onclick="connect()" style="top:48px; left:348px; width:80px; background:#4169e1;">加入联机</button>
         <button onclick="disconnect()" style="top:440px; left:740px; width:80px; background:#dc3545;">断开连接</button>
 
         <button onclick="startGame()" style="top:380px; left:700px; width:140px; background:#28c76f;">开启对局（房主）</button>
@@ -132,7 +155,7 @@
 
         function $(id) { return document.getElementById(id); }
 
-        // 连接服务器（这里改成你的公网/内网穿透地址）
+        // 连接服务器（替换成你的公网/内网穿透地址）
         function connect() {
             roomId = $("roomId").value;
             nick = $("nick").value;
