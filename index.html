@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多多PK元宝猜数字</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "微软雅黑", sans-serif;
+        }
+
+        body {
+            width: 100vw;
+            height: 100vh;
+            background-image: url("background.png");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            overflow-x: hidden;
+        }
+
+        #main {
+            width: 900px;
+            height: 600px;
+            margin: 0 auto;
+            position: relative;
+            transform-origin: top left;
+        }
+
+        /* 自适应手机 */
+        @media (max-width: 900px) {
+            #main {
+                transform: scale(calc(100vw / 900));
+                width: 900px;
+                height: 600px;
+            }
+        }
+
+        input, button {
+            position: absolute;
+            font-size: 16px;
+            padding: 0 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            cursor: pointer;
+            color: white;
+            border: none;
+        }
+
+        .label {
+            position: absolute;
+            color: #800080;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        #title {
+            top: 3px;
+            left: 310px;
+            font-size: 17px;
+            font-weight: bold;
+            color: #800080;
+            position: absolute;
+        }
+
+        #ownerLabel {
+            top: 93px;
+            left: 630px;
+            color: #c00000;
+            font-size: 14px;
+            font-weight: bold;
+            position: absolute;
+        }
+
+        #lockLabel {
+            top: 93px;
+            left: 735px;
+            color: #0066cc;
+            font-size: 14px;
+            position: absolute;
+        }
+
+        #tip {
+            top: 200px;
+            left: 20px;
+            color: blue;
+            font-size: 14px;
+            position: absolute;
+        }
+
+        #logArea {
+            top: 150px;
+            left: 630px;
+            width: 180px;
+            height: 208px;
+            position: absolute;
+            background: #fff;
+            opacity: 0.9;
+            padding: 5px;
+            font-size: 12px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="main">
+        <div id="title">🌐 多多PK元宝猜数字</div>
+        <div id="ownerLabel">👑房主：无</div>
+        <div id="lockLabel">🔓房间：未锁定</div>
+        <div id="tip">请先加入联机</div>
+
+        <input id="roomId" type="text" value="6666" style="top:50px; left:100px; width:100px;">
+        <input id="nick" type="text" placeholder="昵称" style="top:50px; left:260px; width:100px;">
+
+        <button onclick="connect()" style="top:48px; left:348px; width:80px; background:#4169e1;">加入联机</button>
+        <button onclick="startGame()" style="top:380px; left:700px; width:140px; background:#28c76f;">开启对局</button>
+        <button onclick="guess()" style="top:160px; left:280px; width:80px; background:#ff7700;">确认猜测</button>
+        <button onclick="disconnect()" style="top:440px; left:740px; width:80px; background:#dc3545;">断开连接</button>
+
+        <button onclick="lockRoom()" style="top:50px; left:630px; width:100px; background:#666;">锁定房间</button>
+        <button onclick="changeOwner()" style="top:50px; left:745px; width:100px; background:#9922cc;">移交房主</button>
+        <button onclick="kickPlayer()" style="top:500px; left:740px; width:80px; background:#dd2222;">踢出玩家</button>
+
+        <input id="guessInput" type="number" placeholder="数字" style="top:160px; left:160px; width:120px;">
+        <div id="logArea"></div>
+    </div>
+
+    <script>
+        let ws;
+        let connected = false;
+        let roomId = "";
+        let nick = "";
+
+        function $(id) { return document.getElementById(id); }
+
+        function connect() {
+            roomId = $("roomId").value;
+            nick = $("nick").value;
+            if (!roomId || !nick) { alert("请填房间号+昵称"); return; }
+
+            ws = new WebSocket("ws://127.0.0.1:8888");
+            ws.onopen = () => {
+                connected = true;
+                send({ type: "join", room: roomId, name: nick });
+                $("tip").innerText = "✅ 已联机";
+            };
+            ws.onmessage = (e) => {
+                e.data.split("\n").forEach(line => {
+                    if (!line) return;
+                    const msg = JSON.parse(line);
+                    if (msg.type === "log") addLog(msg.content);
+                    if (msg.type === "tip") $("tip").innerText = msg.content;
+                    if (msg.type === "owner") $("ownerLabel").innerText = "👑房主：" + msg.owner;
+                    if (msg.type === "lock_state") $("lockLabel").innerText = msg.lock ? "🔒房间：已锁定" : "🔓房间：未锁定";
+                    if (msg.type === "win") alert("🏆 游戏结束\n赢家：" + msg.winner + "\n答案：" + msg.answers);
+                });
+            };
+        }
+
+        function send(data) {
+            if (!connected) return;
+            ws.send(JSON.stringify(data) + "\n");
+        }
+
+        function guess() {
+            const num = $("guessInput").value;
+            if (!num) return;
+            send({ type: "guess", room: roomId, name: nick, num: parseInt(num) });
+        }
+
+        function startGame() {
+            send({ type: "start_multi", room: roomId, name: nick, max: 200, count: 1 });
+        }
+
+        function lockRoom() {
+            send({ type: "lock_room", room: roomId, name: nick });
+        }
+
+        function changeOwner() {
+            const t = prompt("输入新房主昵称");
+            if (t) send({ type: "change_owner", room: roomId, name: nick, target: t });
+        }
+
+        function kickPlayer() {
+            const t = prompt("输入要踢出的玩家");
+            if (t) send({ type: "kick", room: roomId, name: nick, target: t });
+        }
+
+        function disconnect() {
+            if (ws) ws.close();
+            connected = false;
+            $("tip").innerText = "❌ 已断开";
+            $("ownerLabel").innerText = "👑房主：无";
+            $("lockLabel").innerText = "🔓房间：未锁定";
+        }
+
+        function addLog(text) {
+            const log = $("logArea");
+            log.innerText = text + "\n" + log.innerText;
+        }
+
+        setInterval(() => {
+            if (connected) send({ type: "heartbeat" });
+        }, 5000);
+    </script>
+</body>
+</html>
